@@ -8,6 +8,8 @@ local log = require("logs")
 local syslog = log.make("SYS")
 syslog.log(log.levels.DEBUG,"Starting OS...")
 
+
+
 local function centerWrite(text)
     local width, height = term.getSize() -- Get terminal size
     local x, y = term.getCursorPos() -- Get current cursor position
@@ -65,10 +67,7 @@ function kernel.panic(ae)
     while true do coroutine.yield() end
 end
 
-
-
-
-
+dofile("sys/boot/filesystem/init.lua")
 
 local taskmaster = require("taskmaster")()
 
@@ -77,6 +76,7 @@ function kernel.run(name,func)
         TASKS[name] = Task
         xpcall(func,printError,Task)
         TASKS[name] = nil
+        syslog.log(log.levels.DEBUG,"thread",name,"closed")
     end)
 end
 
