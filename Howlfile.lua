@@ -3,8 +3,8 @@ Options:Default "trace"
 Tasks:clean()
 
 Tasks:minify "minify" {
-	input = "/sys/boot/kernel.lua",
-	output = "/sys/boot/kernel.min.lua",
+	input = "/bin/kernel.lua",
+	output = "/bin/kernel.min.lua",
 }
 
 Tasks:require "main" {

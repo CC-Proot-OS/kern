@@ -26,7 +26,13 @@ function log.make(id)
     function logger.log(lvl,...)
         local c = term.getTextColor()
         term.setTextColor(cols[lvl])
-        print(string.format("[%3s][%8s]",id,log.names[lvl]),...)
+        print(string.format("[%3s][%6s][%8s]",id,"",log.names[lvl]),...)
+        term.setTextColor(c)
+    end
+    function logger.logThrd(thrd,lvl,...)
+        local c = term.getTextColor()
+        term.setTextColor(cols[lvl])
+        print(string.format("[%3s][%6s][%8s]",id,thrd,log.names[lvl]),...)
         term.setTextColor(c)
     end
     return logger
