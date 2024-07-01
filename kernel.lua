@@ -27,6 +27,7 @@ local pfunc = require("pfunc")
 local kernProt = pfunc.make()
 
 TASKS = {}
+---@module kernel
 kernel = kernProt.public
 
 local function SplitFilename(strFilename)

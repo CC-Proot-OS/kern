@@ -31,8 +31,8 @@ return function(kernProt)
     end
 
     local function onLoad(srv,s)
-        --local t = toml.decode(lookup(s,"cfg.toml").data)
-        local t = {enabled = true}
+        local t = toml.decode(lookup(s,"cfg.toml").data)
+        --local t = {enabled = true}
         if t.enabled then
             srvsys.run(srv,s)
         end
@@ -62,6 +62,7 @@ return function(kernProt)
                 local k =lookupKey(s,"cfg.toml")
                 local t = toml.decode(s[k].data)
                 t.enabled = true
+                t.drvr = t.drvr
                 s[k].data = toml.encode(t)
                 ar.save(s,"srv/"..srv..".a")
                 srvsys.run(srv,s)

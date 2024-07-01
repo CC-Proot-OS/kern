@@ -1,4 +1,9 @@
+---@module logs
+--@since 0.0.1
+
 local log = {}
+
+--- Log levels
 log.levels = {
     DEBUG    = 1,
     VERBOSE  = 2,
@@ -7,6 +12,7 @@ log.levels = {
     WARN     = 5,
     CRITICAL = 6,
 }
+---@see log.levels
 log.names = {}
 
 for key, value in pairs(log.levels) do
@@ -21,6 +27,10 @@ local cols = {
     colors.orange,
     colors.red
 }
+
+---creates a logger
+--@param id any
+--@return table
 function log.make(id)
     local logger = {}
     function logger.log(lvl,...)

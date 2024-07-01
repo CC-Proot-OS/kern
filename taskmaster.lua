@@ -1,8 +1,14 @@
+---@module taskmaster
+--@since 0.0.1
+
 -- Taskmaster: A simple and highly flexible task runner/coroutine manager for ComputerCraft
 -- Supports adding/removing tasks, early exits for tasks, event white/blacklists, automatic
 -- terminal redirection, task pausing, promises, and more.
 -- Made by JackMacWindows
 -- Licensed under CC0 in the public domain
+
+
+
 
 --[[
     Examples:
@@ -65,9 +71,9 @@
 ]]
 
 local expect = require "cc.expect"
-
----@class Task
----@field master Taskmaster The event loop for the task
+--#region task
+---@type Task
+--@field master Taskmaster The event loop for the task
 local Task = {}
 local Task_mt = {__name = "Task", __index = Task}
 
@@ -90,7 +96,7 @@ function Task:remove()
 end
 
 --- Sets the priority of the task. This determines the order tasks are run in.
----@param priority number The priority of the task (0 is the default)
+--@param priority number The priority of the task (0 is the default)
 function Task:setPriority(priority)
     expect(1, priority, "number")
     self.priority = priority
@@ -98,7 +104,7 @@ function Task:setPriority(priority)
 end
 
 --- Sets a blacklist for events to send to this task.
----@param list? string[] A list of events to not send to this task
+--@param list? string[] A list of events to not send to this task
 function Task:setEventBlacklist(list)
     if expect(1, list, "table", "nil") then
         self.blacklist = {}
@@ -107,7 +113,7 @@ function Task:setEventBlacklist(list)
 end
 
 --- Sets a whitelist for events to send to this task.
----@param list? string[] A list of events to send to this task (others are discarded)
+--@param list? string[] A list of events to send to this task (others are discarded)
 function Task:setEventWhitelist(list)
     if expect(1, list, "table", "nil") then
         self.whitelist = {}
@@ -116,23 +122,26 @@ function Task:setEventWhitelist(list)
 end
 
 --- Sets an error handler for a task.
----@param errh? fun(err: any, task: Task) A function to call if the task throws an error
+--@param errh? fun(err: any, task: Task) A function to call if the task throws an error
 function Task:setErrorHandler(errh)
     self.errh = expect(1, errh, "function", "nil")
 end
+--#endregion
 
----@class Promise
----@field private task Task
----@field private resolve fun(...: any)|nil
----@field private reject fun(err: any)|nil
----@field private final fun()|nil
+
+--#region Promise 
+---@type Promise
+--@field task Task
+--@field resolve fun(...: any)|nil
+--@field reject fun(err: any)|nil
+--@field final fun()|nil
 local Promise = {}
 local Promise_mt = {__name = "Promise", __index = Promise}
 
 --- Creates a new Promise on the selected run loop.
----@param loop Taskmaster The loop to create the promise on
----@param fn fun(resolve: fun(...: any), reject: fun(err: any)) The main function for the promise
----@return Promise promise The new promise
+--@param loop Taskmaster The loop to create the promise on
+--@param fn fun(resolve: fun(...: any), reject: fun(err: any)) The main function for the promise
+--@return Promise promise The new promise
 function Promise:new(loop, fn)
     expect(1, loop, "table")
     expect(2, fn, "function")
@@ -153,9 +162,9 @@ function Promise:new(loop, fn)
 end
 
 --- Creates a new Promise that resolves once all of the listed promises resolve.
----@param loop Taskmaster The loop to create the promise on
----@param list Promise[] The promises to wait for
----@return Promise promise The new promise
+--@param loop Taskmaster The loop to create the promise on
+--@param list Promise[] The promises to wait for
+--@return Promise promise The new promise
 function Promise:all(loop, list)
     expect(1, loop, "table")
     expect(2, list, "table")
@@ -170,10 +179,11 @@ function Promise:all(loop, list)
     end)
 end
 
+
 --- Creates a new Promise that resolves once any of the listed promises resolve, or rejects if all promises reject.
----@param loop Taskmaster The loop to create the promise on
----@param list Promise[] The promises to wait for
----@return Promise promise The new promise
+--@param loop Taskmaster The loop to create the promise on
+--@param list Promise[] The promises to wait for
+--@return Promise promise The new promise
 function Promise:any(loop, list)
     expect(1, loop, "table")
     expect(2, list, "table")
@@ -189,9 +199,9 @@ function Promise:any(loop, list)
 end
 
 --- Creates a new Promise that resolves once any of the listed promises resolve.
----@param loop Taskmaster The loop to create the promise on
----@param list Promise[] The promises to wait for
----@return Promise promise The new promise
+--@param loop Taskmaster The loop to create the promise on
+--@param list Promise[] The promises to wait for
+--@return Promise promise The new promise
 function Promise:race(loop, list)
     expect(1, loop, "table")
     expect(2, list, "table")
@@ -201,9 +211,9 @@ function Promise:race(loop, list)
 end
 
 --- Creates a new Promise that immediately resolves to a value.
----@param loop Taskmaster The loop to create the promise on
----@param val any The value to resolve to
----@return Promise promise The new promise
+--@param loop Taskmaster The loop to create the promise on
+--@param val any The value to resolve to
+--@return Promise promise The new promise
 function Promise:_resolve(loop, val)
     expect(1, loop, "table")
     local obj = setmetatable({}, Promise_mt)
@@ -214,9 +224,9 @@ function Promise:_resolve(loop, val)
 end
 
 --- Creates a new Promise that immediately rejects with an error.
----@param loop Taskmaster The loop to create the promise on
----@param err any The value to resolve to
----@return Promise promise The new promise
+--@param loop Taskmaster The loop to create the promise on
+--@param err any The value to resolve to
+--@return Promise promise The new promise
 function Promise:_reject(loop, err)
     expect(1, loop, "table")
     local obj = setmetatable({}, Promise_mt)
@@ -227,9 +237,9 @@ function Promise:_reject(loop, err)
 end
 
 --- Adds a function to call when the promise resolves.
----@param fn fun(...: any): Promise|nil The function to call
----@param err? fun(err: any) A function to catch errors
----@return Promise next The next promise in the chain
+--@param fn fun(...: any): Promise|nil The function to call
+--@param err? fun(err: any) A function to catch errors
+--@return Promise next The next promise in the chain
 function Promise:next(fn, err)
     expect(1, fn, "function")
     expect(2, err, "function", "nil")
@@ -253,8 +263,8 @@ end
 Promise.Then = Promise.next
 
 --- Sets the error handler for the promise.
----@param fn fun(err: any) The error handler to use
----@return Promise self
+--@param fn fun(err: any) The error handler to use
+--@return Promise self
 function Promise:catch(fn)
     expect(1, fn, "function")
     self.reject = function(err) self.reject = nil fn(err) if self.final then self.final() end end
@@ -262,8 +272,8 @@ function Promise:catch(fn)
 end
 
 --- Sets a function to call after the promise settles.
----@param fn fun() The function to call
----@return Promise self
+--@param fn fun() The function to call
+--@return Promise self
 function Promise:finally(fn)
     expect(1, fn, "function")
     self.final = function() self.final = nil return fn() end
@@ -276,59 +286,62 @@ end
 local PromiseConstructor = {}
 
 --- Creates a new Promise on the selected run loop.
----@param fn fun(resolve: fun(...: any), reject: fun(err: any)) The main function for the promise
----@return Promise promise The new promise
+--@param fn fun(resolve: fun(...: any), reject: fun(err: any)) The main function for the promise
+--@return Promise promise The new promise
 function PromiseConstructor.new(fn) end
 
 --- Creates a new Promise that resolves once all of the listed promises resolve.
----@param list Promise[] The promises to wait for
----@return Promise promise The new promise
+--@param list Promise[] The promises to wait for
+--@return Promise promise The new promise
 function PromiseConstructor.all(list) end
 
 --- Creates a new Promise that resolves once any of the listed promises resolve, or rejects if all promises reject.
----@param list Promise[] The promises to wait for
----@return Promise promise The new promise
+--@param list Promise[] The promises to wait for
+--@return Promise promise The new promise
 function PromiseConstructor.any(list) end
 
 --- Creates a new Promise that resolves once any of the listed promises resolve.
----@param list Promise[] The promises to wait for
----@return Promise promise The new promise
+--@param list Promise[] The promises to wait for
+--@return Promise promise The new promise
 function PromiseConstructor.race(list) end
 
 --- Creates a new Promise that immediately resolves to a value.
----@param val any The value to resolve to
----@return Promise promise The new promise
+--@param val any The value to resolve to
+--@return Promise promise The new promise
 function PromiseConstructor.resolve(val) end
 
 --- Creates a new Promise that immediately rejects with an error.
----@param err any The value to resolve to
----@return Promise promise The new promise
+--@param err any The value to resolve to
+--@return Promise promise The new promise
 function PromiseConstructor.reject(err) end
 
 --- Makes an HTTP request to a URL, and returns a Promise for the result.
---- The promise will resolve with the handle to the response, which will also
---- have the following methods:
---- - res.text(): Returns a promise that resolves to the body of the response.
---- - res.table(): Returns a promise that resolves to the body unserialized as a Lua table.
---- - res.json(): Returns a promise that resolves to the body unserialized as JSON.
----@param url string The URL to connect to
----@param body? string If specified, a POST body to send
----@param headers? table<string, string> Any HTTP headers to add to the request
----@param binary? boolean Whether to send in binary mode (deprecated as of CC:T 1.109.0)
----@overload fun(options: {url: string, body?: string, headers?: string, method?: string, binary?: string, timeout?: number}): Promise
----@return Promise promise The new promise
+-- The promise will resolve with the handle to the response, which will also
+-- have the following methods:
+-- - res.text(): Returns a promise that resolves to the body of the response.
+-- - res.table(): Returns a promise that resolves to the body unserialized as a Lua table.
+-- - res.json(): Returns a promise that resolves to the body unserialized as JSON.
+--@param url string The URL to connect to
+--@param body? string If specified, a POST body to send
+--@param headers? table<string, string> Any HTTP headers to add to the request
+--@param binary? boolean Whether to send in binary mode (deprecated as of CC:T 1.109.0)
+--@overload fun(options: {url: string, body?: string, headers?: string, method?: string, binary?: string, timeout?: number}): Promise
+--@return Promise promise The new promise
 function PromiseConstructor.fetch(url, body, headers, binary) end
 
 ---@diagnostic enable: missing-return
+--#endregion
 
----@class Taskmaster
----@field Promise PromiseConstructor
+--#region Taskmaster
+
+---@type Taskmaster
+--@field Promise PromiseConstructor
 local Taskmaster = {}
 local Taskmaster_mt = {__name = "Taskmaster", __index = Taskmaster}
 
 --- Adds a task to the loop.
----@param fn fun(Task) The main function to add, which receives the task as an argument
----@return Task task The created task
+--@param fn fun(Task) The main function to add, which receives the task as an argument
+--@return Task task The created task
 function Taskmaster:addTask(fn)
     expect(1, fn, "function")
     local task = setmetatable({coro = coroutine.create(fn), master = self, priority = 0}, Task_mt)
@@ -338,14 +351,14 @@ function Taskmaster:addTask(fn)
 end
 
 --- Adds a task to the loop in builder style.
----@param fn fun(Task) The main function to add
----@return Taskmaster self
+--@param fn fun(Task) The main function to add
+--@return Taskmaster self
 function Taskmaster:task(fn) self:addTask(fn) return self end
 
 --- Adds a function to the loop. This is just like a task, but allows extra arguments.
----@param fn function The main function to add, which receives the arguments passed
----@param ... any Any arguments to pass to the function
----@return Task task The created task
+--@param fn function The main function to add, which receives the arguments passed
+--@param ... any Any arguments to pass to the function
+--@return Task task The created task
 function Taskmaster:addFunction(fn, ...)
     expect(1, fn, "function")
     local args = table.pack(...)
@@ -356,15 +369,15 @@ function Taskmaster:addFunction(fn, ...)
 end
 
 --- Adds a function to the loop in builder style.
----@param fn function The main function to add
----@param ... any Any arguments to pass to the function
----@return Taskmaster self
+--@param fn function The main function to add
+--@param ... any Any arguments to pass to the function
+--@return Taskmaster self
 function Taskmaster:func(fn, ...) self:addFunction(fn, ...) return self end
 
 --- Adds an event listener to the loop. This is a special task that calls a function whenever an event is triggered.
----@param name string The name of the event to listen for
----@param fn fun(string, ...) The function to call for each event
----@return Task task The created task
+--@param name string The name of the event to listen for
+--@param fn fun(string, ...) The function to call for each event
+--@return Task task The created task
 function Taskmaster:addEventListener(name, fn)
     expect(1, name, "string")
     expect(2, fn, "function")
@@ -375,18 +388,18 @@ function Taskmaster:addEventListener(name, fn)
 end
 
 --- Adds an event listener to the loop in builder style. This is a special task that calls a function whenever an event is triggered.
----@param name string The name of the event to listen for
----@param fn fun(string, ...) The function to call for each event
----@return Taskmaster self
+--@param name string The name of the event to listen for
+--@param fn fun(string, ...) The function to call for each event
+--@return Taskmaster self
 function Taskmaster:eventListener(name, fn) self:addEventListener(name, fn) return self end
 
 --- Adds a task that triggers a function repeatedly after an interval. The function may modify or cancel the interval through a return value.
----@param timeout number The initial interval to run the function after
----@param fn fun():number|nil The function to call.
----If this returns a number, that number replaces the timeout.
----If this returns a number less than or equal to 0, the timer is canceled.
----If this returns nil, the timeout remains the same.
----@return Task task The created task
+--@param timeout number The initial interval to run the function after
+--@param fn fun():number|nil The function to call.
+--If this returns a number, that number replaces the timeout.
+--If this returns a number less than or equal to 0, the timer is canceled.
+--If this returns nil, the timeout remains the same.
+--@return Task task The created task
 function Taskmaster:addTimer(timeout, fn)
     expect(1, timeout, "number")
     expect(2, fn, "function")
@@ -403,12 +416,12 @@ function Taskmaster:addTimer(timeout, fn)
 end
 
 --- Adds a task that triggers a function repeatedly after an interval in builder style. The function may modify or cancel the interval through a return value.
----@param timeout number The initial interval to run the function after
----@param fn fun():number|nil The function to call.
----If this returns a number, that number replaces the timeout.
----If this returns a number less than or equal to 0, the timer is canceled.
----If this returns nil, the timeout remains the same.
----@return Taskmaster self
+--@param timeout number The initial interval to run the function after
+--@param fn fun():number|nil The function to call.
+--If this returns a number, that number replaces the timeout.
+--If this returns a number less than or equal to 0, the timer is canceled.
+--If this returns nil, the timeout remains the same.
+--@return Taskmaster self
 function Taskmaster:timer(timeout, fn) self:addTimer(timeout, fn) return self end
 
 --- Sets a blacklist for events to send to all tasks. Tasks can override this with their own blacklist.
@@ -421,7 +434,7 @@ function Taskmaster:setEventBlacklist(list)
 end
 
 --- Sets a whitelist for events to send to all tasks. Tasks can override this with their own whitelist.
----@param list? string[] A list of events to send to all tasks (others are discarded)
+--@param list? string[] A list of events to send to all tasks (others are discarded)
 function Taskmaster:setEventWhitelist(list)
     if expect(1, list, "table", "nil") then
         self.whitelist = {}
@@ -430,23 +443,23 @@ function Taskmaster:setEventWhitelist(list)
 end
 
 --- Sets a function that is used to transform events. This function takes a task
---- and event table, and may modify the event table to adjust the event for that task.
----@param fn fun(Task, table)|nil A function to use to transform events
+-- and event table, and may modify the event table to adjust the event for that task.
+--@param fn fun(Task, table)|nil A function to use to transform events
 function Taskmaster:setEventTransformer(fn)
     expect(1, fn, "function", "nil")
     self.transformer = fn
 end
 
 --- Sets a function to call before yielding. This can be used to reset state such
---- as terminal cursor position.
----@param fn? fun() The function to call
+-- as terminal cursor position.
+--@param fn? fun() The function to call
 function Taskmaster:setPreYieldHook(fn)
     expect(1, fn, "function", "nil")
     self.preYieldHook = fn
 end
 
 --- Runs the main loop, processing events and running each task.
----@param count? number The number of tasks that can exit before stopping the loop
+--@param count? number The number of tasks that can exit before stopping the loop
 function Taskmaster:run(count)
     count = expect(1, count, "number", "nil") or math.huge
     self.running = true
@@ -531,6 +544,8 @@ end
 
 Taskmaster_mt.__call = Taskmaster.run
 
+--#endregion
+
 local function fetch(loop, url, ...)
     local ok, err = http.request(url, ...)
     if not ok then return Promise:_reject(loop, err) end
@@ -573,8 +588,8 @@ local function fetch(loop, url, ...)
 end
 
 --- Creates a new Taskmaster run loop.
----@param ... fun() Any tasks to add to the loop
----@return Taskmaster loop The new Taskmaster
+--@param ... fun() Any tasks to add to the loop
+--@return Taskmaster loop The new Taskmaster
 return function(...)
     local loop = setmetatable({tasks = {}, dead = {}, new = {}}, Taskmaster_mt)
     for i, v in ipairs{...} do
