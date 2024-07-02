@@ -176,12 +176,15 @@ syslog.log(log.levels.INFO,"FS Loaded")
 fs = filesystem
 
 io = require("io")
+local userspace = require("userspace")
+userspace.update(_G)
 
 local taskmaster = require("taskmaster")()
 
 function kernel.run(name,func)
     taskmaster:addTask(function(Task)
         TASKS[name] = Task
+        setfenv(func,userspace)
         xpcall(func,printError,Task)
         TASKS[name] = nil
         syslog.log(log.levels.DEBUG,"thread",name,"closed")
@@ -229,7 +232,7 @@ kernProt.private.run("kernel",function(Task)
     syslog.log(log.levels.DEBUG,"kernel thread started")
     print("Welcome to \27[96mProot\27[93mOS\27[0m")
     read()
-    dofile("bin/cash.lua")
+    kernel.run("cash",loadfile("bin/cash.lua"))
 end)
 
 syslog.log(log.levels.INFO,"Starting Threadding")
